@@ -42,6 +42,8 @@ class piece:
         self.location = newLocation
         if self.firstMoveTime is None:
             self.firstMoveTime = 0
+    def __repr__(self):
+        return "{}s {} at {}".format(self.token,self.sign(),self.location)
 class pawn(piece):
     def __init__(self,token,direction):
         piece.__init__(self,token)

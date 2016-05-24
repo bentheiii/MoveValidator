@@ -155,6 +155,8 @@ class validator:
             return True
         return (self.prevTurn != playToken)
     def nextPlay(self):
+        if self.prevTurn is None:
+            return None
         if self.board.tokenB == self.prevTurn:
             return self.board.tokenW
         else:
