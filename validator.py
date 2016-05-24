@@ -5,6 +5,8 @@ from moveinterpreter import moveTypes
 class validator:
     def __init__(self,whitetoken,blacktoken,size=8):
         self.board = boardState(whitetoken,blacktoken,size)
+        #dictates which token should not play next, None means anyone can play next (in case of assignment)
+        self.prevTurn = None
     def ValidateAppear(self,move):
         whites = filter(lambda x:x.kind==self.board.tokenW,move.appears)
         #whites = []
@@ -78,9 +80,9 @@ class validator:
                 return True,2
         if NWCorner==SWCorner:
             if NWCorner==self.board.tokenW:
-                return True,1
-            else:
                 return True,3
+            else:
+                return True,1
     def commitAppear(self,transform):
         self.board.transform = transform
 
@@ -106,22 +108,32 @@ class validator:
             self.board.insertPiece(pawn(self.board.tokenW,1),(1,i))
             self.board.insertPiece(pawn(self.board.tokenB,-1),(6,i))
 
+        self.advanceTurn(None)
+    def hasTurn(self,playToken):
+        if self.prevTurn is None:
+            return True
+        return (self.prevTurn != playToken)
     def isValid(self,move):
         if move.type == moveTypes.appear:
             return self.ValidateAppear(move)
         if self.board.pieces is None:
             return False,None
         if move.type == moveTypes.regular:
-            mover = self.board.occupant(move.disappears[0].coordinates)
+            mover = self.board.occupant(move.disappears[0].coordinates, transformcoor=True)
+            if not self.hasTurn(mover.token):
+                return False, None
             board = self.board if mover.token==self.board.tokenW else self.board.reverse()
-            if not mover.validMove(move.appears[0].coordinates,board):
+            targetcoor = coortransform(move.appears[0].coordinates,self.board.transform,self.board.size)
+            if not mover.validMove(targetcoor,board):
                 return False, None
             else:
                 return True, mover
         if move.type == moveTypes.eat or move.type == moveTypes.irregularEat:
-            eaten = self.board.occupant(move.disappears[0].coordinates if move.disappears[1].kind == move.appears[0].kind else move.disappears[1].coordinates)
-            eatertarloc = move.appears[0].coordinates
-            eater = self.board.occupant(move.disappears[0].coordinates if move.disappears[0].kind == move.appears[0].kind else move.disappears[1].coordinates)
+            eaten = self.board.occupant(move.disappears[0].coordinates if move.disappears[1].kind == move.appears[0].kind else move.disappears[1].coordinates, transformcoor=True)
+            eatertarloc = coortransform(move.appears[0].coordinates,self.board.transform,self.board.size)
+            eater = self.board.occupant(move.disappears[0].coordinates if move.disappears[0].kind == move.appears[0].kind else move.disappears[1].coordinates, transformcoor=True)
+            if not self.hasTurn(eater.token):
+                return False, None
             board = self.board if eater.token==self.board.tokenW else self.board.reverse()
             if not eater.validEat(eatertarloc,eaten,board):
                 return False,None
@@ -129,21 +141,24 @@ class validator:
         if move.type == moveTypes.multiMove:
             pass#TODO:castling
         return False, None
-
+    def advanceTurn(self,prevToken):
+        self.prevTurn = prevToken
     def Commit(self,move,validationValue):
         if move.type == moveTypes.appear:
             self.commitAppear(validationValue)
         elif move.type == moveTypes.regular:
             self.board.assign(None,validationValue.location)
-            validationValue.move(move.appears[0].coordinates)
+            validationValue.move(coortransform(move.appears[0].coordinates,self.board.transform,self.board.size))
             self.board.assign(validationValue,validationValue.location)
+            self.advanceTurn(validationValue.token)
         elif move.type == moveTypes.eat or move.type == moveTypes.irregularEat:
             eater, eaten = validationValue
             self.board.assign(None,eaten.location)
             self.board.pieces.remove(eaten)
             self.board.assign(None,eater.location)
-            eater.move(move.appears[0].coordinates)
+            eater.move(coortransform(move.appears[0].coordinates,self.board.transform,self.board.size))
             self.board.assign(eater,eater.location)
+            self.advanceTurn(eater.token)
         elif move.type == moveTypes.multiMove:
             pass
         self.board.advance()

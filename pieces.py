@@ -48,7 +48,7 @@ class pawn(piece):
         self.jumpTime = None
         self.direction = direction
     def canMove(self,targetLocation,board):
-        diff = locationdiff(self.location,targetLocation)
+        diff = locationdiff(self.location, targetLocation)
         if diff[1]!=0:
             return False
         if diff[0] == self.direction:

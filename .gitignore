@@ -3,3 +3,8 @@
 ################################################################################
 
 /MoveValidator.sln
+/MoveValidator.pyproj
+/validator.pyc
+/pieces.pyc
+/moveinterpreter.pyc
+/boardstate.pyc

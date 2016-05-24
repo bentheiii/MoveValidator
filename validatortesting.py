@@ -19,26 +19,39 @@ def loadBoards(source, size=8, noneToken ='0'):
             ret = None
             row = 0
 
-def strSigns(state,size=8):
+def strSigns(state,size=8,transform=False):
     ret = []
     for x in xrange(size):
         for y in xrange(size):
-            if state.occupant(x,y) is None:
-                ret.append("#")
+            if state.occupant(x,y,transform) is None:
+                ret.append(".")
             else:
-                ret.append(state.occupant(x,y).sign())
+                ret.append(state.occupant(x,y,transform).sign())
+        ret.append("\n")
+    return "".join(ret)
+
+def strTokens(state,size=8,transform=False):
+    ret = []
+    for x in xrange(size):
+        for y in xrange(size):
+            if state.occupant(x,y,transform) is None:
+                ret.append(".")
+            else:
+                ret.append(state.occupant(x,y,transform).token)
         ret.append("\n")
     return "".join(ret)
 
 interpreter = moveInterpreter()
 movevalidator = validator('2','1',8)
-for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(1))),count(1)):
+for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(3))),count(1)):
     move = interpreter.nextmove(b)
     valid, valValue = movevalidator.isValid(move)
     if valid:
         interpreter.commit(b)
         movevalidator.Commit(move,valValue)
         print "#{}".format(ind)
-        print strSigns(movevalidator.board)
+        print strSigns(movevalidator.board,transform=True)
+        print
+        print strTokens(movevalidator.board,transform=True)
     else:
         print "#{}: bad move".format(ind)

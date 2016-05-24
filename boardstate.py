@@ -31,11 +31,12 @@ class boardState:
         self.transform = 0
         self.size = size
         self.pieces = None
-    def occupant(self,x,y=None):
+    def occupant(self,x,y=None,transformcoor=False):
         if y is None:
             y = x[1]
             x = x[0]
-        x,y = coortransform((x,y),self.transform,self.size)
+        if transformcoor:
+            x,y = coortransform((x,y),self.transform,self.size)
         return self.data[x][y]
     def assign(self,piece,x,y=None):
         if y is None:
@@ -59,9 +60,10 @@ class TransformBoardState:
         self.transform = transform
         self.size = size
         self.source = source
-    def occupant(self,x,y=None):
+    def occupant(self,x,y=None,transformcoor=False):
         if y is None:
             y = x[1]
             x = x[0]
-        x,y = coortransform((x,y),self.transform,self.size)
+        if transformcoor:
+            x,y = coortransform((x,y),self.transform,self.size)
         return self.source[x][y]
