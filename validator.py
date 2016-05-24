@@ -1,7 +1,13 @@
 from pieces import *
-from boardstate import boardState, coortransform
+from boardstate import boardState, coortransform, allClear
 from moveinterpreter import moveTypes
-#TODO:turns
+
+def containerequals(item1,item2):
+    for i in item1:
+        if not i in item2:
+            return False
+    return True
+
 class validator:
     def __init__(self,whitetoken,blacktoken,size=8):
         self.board = boardState(whitetoken,blacktoken,size)
@@ -83,6 +89,32 @@ class validator:
                 return True,3
             else:
                 return True,1
+    def ValidateCastling(self,move):
+        if len(move.appears) != 2:
+            return False,None
+        piece1 = self.board.occupant(move.disappears[0].coordinates,transformcoor=True)
+        piece2 = self.board.occupant(move.disappears[1].coordinates,transformcoor=True)
+        if isinstance(piece1,king) and isinstance(piece2,rook):
+            k = piece1
+            r = piece2
+        elif isinstance(piece2,king) and isinstance(piece1,rook):
+            k = piece2
+            r = piece1
+        else:
+            return False, None
+        if k.firstMoveTime != None or r.firstMoveTime != None:
+            return False, None
+        if not allClear(self.board,getPath(k.location,r.location)):
+            return False, None
+        if r.location[1] == 7:
+            #big castling
+            newlocs = ((r.location[0],6),(r.location[0],5))
+        else:
+            #small castling
+            newlocs = ((r.location[0],2),(r.location[0],3))
+        if not containerequals(map(lambda x:coortransform(x.coordinates,self.board.transform,self.board.size),move.appears),newlocs):
+            return False, None
+        return True,(k,r,newlocs[0],newlocs[1])
     def commitAppear(self,transform):
         self.board.transform = transform
 
@@ -109,10 +141,24 @@ class validator:
             self.board.insertPiece(pawn(self.board.tokenB,-1),(6,i))
 
         self.advanceTurn(None)
+    def commitCastling(self,valValue):
+        k,r,kloc,rloc = valValue
+        self.board.assign(None,k.location)
+        k.move(kloc)
+        self.board.assign(k,k.location)
+        self.board.assign(None,r.location)
+        r.move(rloc)
+        self.board.assign(r,r.location)
+        self.advanceTurn(k.token)
     def hasTurn(self,playToken):
         if self.prevTurn is None:
             return True
         return (self.prevTurn != playToken)
+    def nextPlay(self):
+        if self.board.tokenB == self.prevTurn:
+            return self.board.tokenW
+        else:
+            return self.board.tokenB
     def isValid(self,move):
         if move.type == moveTypes.appear:
             return self.ValidateAppear(move)
@@ -139,7 +185,7 @@ class validator:
                 return False,None
             return True,(eater,eaten)
         if move.type == moveTypes.multiMove:
-            pass#TODO:castling
+            return self.ValidateCastling(move)
         return False, None
     def advanceTurn(self,prevToken):
         self.prevTurn = prevToken
@@ -160,6 +206,6 @@ class validator:
             self.board.assign(eater,eater.location)
             self.advanceTurn(eater.token)
         elif move.type == moveTypes.multiMove:
-            pass
+            self.commitCastling(validationValue)
         self.board.advance()
 
