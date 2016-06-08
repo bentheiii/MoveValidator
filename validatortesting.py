@@ -2,6 +2,7 @@ from moveinterpreter import board,moveInterpreter
 from validator import validator
 from itertools import *
 from gameRecorder import openRecorder
+from encoding import encodeState
 
 def loadBoards(source, size=8, noneToken ='0'):
     ret = None
@@ -46,11 +47,13 @@ def strTokens(state,size=8,transform=False):
                 ret.append(state.occupant(x,y,transform).token)
         ret.append("\n")
     return "".join(ret)
+sourceind = 0
 
 interpreter = moveInterpreter()
 movevalidator = validator('U','l',8)
-recorder = openRecorder('test0.ckm',movevalidator.board.tokenW)
-for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(4))),count(1)):
+
+recorder = openRecorder('recordings/test{}.ckm'.format(sourceind),movevalidator.board.tokenW)
+for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(sourceind))),count(1)):
     move = interpreter.nextmove(b)
     valid, valValue = movevalidator.isValid(move)
     if valid:
@@ -59,8 +62,9 @@ for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(4))),co
         print "#{}".format(ind)
         print strSigns(movevalidator.board,transform=True)
         print "next play: {}".format(movevalidator.nextPlay())
-
+        print map(lambda x:x,encodeState(movevalidator.board,move,movevalidator.board.tokenW,movevalidator.nextPlay()))
+        recorder.record(movevalidator.board,move,movevalidator.nextPlay())
         #raw_input()
-        #print strTokens(movevalidator.board,transform=True)
     else:
         print "#{}: bad move".format(ind)
+del recorder
