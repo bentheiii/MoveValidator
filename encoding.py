@@ -7,7 +7,7 @@ ENCODINGSIZE=37
 #       next     1  byte: additional game info 
 #total package size = 37bytes ,standard game ~2K, longest ~10K
 #piece location:0-63 locations on the board (0,0)->0, (1,0)->1
-#piece location 64: piece eaten (or otherwise missing)
+#piece location ~64~ 255: piece eaten (or otherwise missing)
 #piece locations ordered by piece type as follows: PPPPPPPPRRHHBBQK
 #first white pieces, then black pieces
 #
@@ -31,27 +31,20 @@ ENCODINGSIZE=37
 #
 #will be encoded as:
 #[1,9,17,25,33,41,49,57,0,56,8,48,16,40,24,32,6,14,22,30,38,46,54,62,7,63,15,55,23,47,31,39,128,128,128,128,0]
+
+#new location encoding:
+#first 3 bits- rows
+#next 3 bits- collumns
+#last 2 bits-piece type:
+#   00- (<=63)as is
+#   01- (64-127)draw as knight
+#   10- (128-191)draw as queen
+#   11- (>=192) do not draw
 def encodeState(board,move,whiteToken,nextplay):
-    pieces = [64]*32
+    pieces = [255]*32
     for p in board.pieces:
-        offset = 0
-        if p.token != whiteToken:
-            offset += 16
-        if isinstance(p,pawn):
-            pass
-        elif isinstance(p,rook):
-            offset += 8
-        elif isinstance(p,knight):
-            offset+=10
-        elif isinstance(p,bishop):
-            offset+=12
-        elif isinstance(p,queen):
-            offset+=14
-        else:#king
-            offset+=15
-        while pieces[offset] != 64:
-            offset+=1
-        pieces[offset] = p.location[1]*board.size+p.location[0]
+        offset = p.encodingslot
+        pieces[offset] = (p.location[1]*board.size+p.location[0]) | p.encodingFlag
     focus = []
     if len(move.appears) + len(move.disappears) <= 4:
         for a in move.appears:

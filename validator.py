@@ -1,6 +1,7 @@
 from pieces import *
 from boardstate import boardState, coortransform, allClear
 from moveinterpreter import moveTypes
+import copy
 
 def containerequals(item1,item2):
     for i in item1:
@@ -19,7 +20,7 @@ class validator:
         return self.boards[-1]
     @board.setter
     def board(self,value):
-        self.boards.append(value)
+        self.boards.append(copy.deepcopy(value))
 
     def ValidateAppear(self,move):
         whites = filter(lambda x:x.kind==self.board.tokenW,move.appears)
@@ -126,27 +127,27 @@ class validator:
     def commitAppear(self,transform):
         self.board.transform = transform
 
-        self.board.insertPiece(rook(self.board.tokenW),(0,0))
-        self.board.insertPiece(rook(self.board.tokenW),(0,7))
-        self.board.insertPiece(knight(self.board.tokenW),(0,1))
-        self.board.insertPiece(knight(self.board.tokenW),(0,6))
-        self.board.insertPiece(bishop(self.board.tokenW),(0,2))
-        self.board.insertPiece(bishop(self.board.tokenW),(0,5))
-        self.board.insertPiece(queen(self.board.tokenW),(0,3))
-        self.board.insertPiece(king(self.board.tokenW),(0,4))
+        self.board.insertPiece(rook(self.board.tokenW,8),(0,0))
+        self.board.insertPiece(rook(self.board.tokenW,9),(0,7))
+        self.board.insertPiece(knight(self.board.tokenW,10),(0,1))
+        self.board.insertPiece(knight(self.board.tokenW,11),(0,6))
+        self.board.insertPiece(bishop(self.board.tokenW,12),(0,2))
+        self.board.insertPiece(bishop(self.board.tokenW,13),(0,5))
+        self.board.insertPiece(queen(self.board.tokenW,14),(0,3))
+        self.board.insertPiece(king(self.board.tokenW,15),(0,4))
 
-        self.board.insertPiece(rook(self.board.tokenB),(7,0))
-        self.board.insertPiece(rook(self.board.tokenB),(7,7))
-        self.board.insertPiece(knight(self.board.tokenB),(7,1))
-        self.board.insertPiece(knight(self.board.tokenB),(7,6))
-        self.board.insertPiece(bishop(self.board.tokenB),(7,2))
-        self.board.insertPiece(bishop(self.board.tokenB),(7,5))
-        self.board.insertPiece(queen(self.board.tokenB),(7,3))
-        self.board.insertPiece(king(self.board.tokenB),(7,4))
+        self.board.insertPiece(rook(self.board.tokenB,24),(7,0))
+        self.board.insertPiece(rook(self.board.tokenB,25),(7,7))
+        self.board.insertPiece(knight(self.board.tokenB,26),(7,1))
+        self.board.insertPiece(knight(self.board.tokenB,27),(7,6))
+        self.board.insertPiece(bishop(self.board.tokenB,28),(7,2))
+        self.board.insertPiece(bishop(self.board.tokenB,29),(7,5))
+        self.board.insertPiece(queen(self.board.tokenB,30),(7,3))
+        self.board.insertPiece(king(self.board.tokenB,31),(7,4))
 
         for i in xrange(8):
-            self.board.insertPiece(pawn(self.board.tokenW,1),(1,i))
-            self.board.insertPiece(pawn(self.board.tokenB,-1),(6,i))
+            self.board.insertPiece(pawn(self.board.tokenW,1,i),(1,i))
+            self.board.insertPiece(pawn(self.board.tokenB,-1,i+16),(6,i))
 
         self.advanceTurn(None)
     def commitCastling(self,valValue):
@@ -183,7 +184,10 @@ class validator:
             if not mover.validMove(targetcoor,board):
                 return False, None
             else:
-                return True, mover
+                promote = False
+                if isinstance(mover, pawn) and targetcoor[0] == (7 if mover.direction == 1 else 0):
+                    promote = True
+                return True, (mover, promote)
         if move.type == moveTypes.eat or move.type == moveTypes.irregularEat:
             eaten = self.board.occupant(move.disappears[0].coordinates if move.disappears[1].kind == move.appears[0].kind else move.disappears[1].coordinates, transformcoor=True)
             eatertarloc = coortransform(move.appears[0].coordinates,self.board.transform,self.board.size)
@@ -199,14 +203,17 @@ class validator:
         return False, None
     def advanceTurn(self,prevToken):
         self.prevTurn = prevToken
-    def Commit(self,move,validationValue):
+    def Commit(self,move,validationValue,promotionvalue = 'Q'):
         if move.type == moveTypes.appear:
             self.commitAppear(validationValue)
         elif move.type == moveTypes.regular:
-            self.board.assign(None,validationValue.location)
-            validationValue.move(coortransform(move.appears[0].coordinates,self.board.transform,self.board.size))
-            self.board.assign(validationValue,validationValue.location)
-            self.advanceTurn(validationValue.token)
+            mover = validationValue[0]
+            self.board.assign(None,mover.location)
+            mover.move(coortransform(move.appears[0].coordinates,self.board.transform,self.board.size))
+            self.board.assign(mover,mover.location)
+            self.advanceTurn(mover.token)
+            if validationValue[1] is True:
+                self.promote(mover,promotionvalue)
         elif move.type == moveTypes.eat or move.type == moveTypes.irregularEat:
             eater, eaten = validationValue
             self.board.assign(None,eaten.location)
@@ -220,3 +227,7 @@ class validator:
         self.board.advance()
     def rollBack(self):
         self.boards = self.board[:-1]
+    def promote(self, propawn, promoteSign):
+        proclass = queen if promoteSign=='Q' else knight
+        self.board.pieces.remove(propawn)
+        self.board.insertPiece(proclass(propawn.token,propawn.encodingslot),propawn.location)

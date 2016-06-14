@@ -1,4 +1,4 @@
-from encoding import encodeState
+from encoding import encodeState, ENCODINGSIZE
 import os
 import platform
 
@@ -34,6 +34,6 @@ class gameRecorder:
         self._file.write(data)
     def __del__(self):
         self._file.close()
-    def rollBack(self,size):
+    def rollBack(self,size = ENCODINGSIZE):
         self._file.seek(-size, os.SEEK_END)
         self._file.truncate()

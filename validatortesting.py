@@ -47,7 +47,7 @@ def strTokens(state,size=8,transform=False):
                 ret.append(state.occupant(x,y,transform).token)
         ret.append("\n")
     return "".join(ret)
-sourceind = 0
+sourceind = 5
 
 interpreter = moveInterpreter()
 movevalidator = validator('U','l',8)
@@ -58,7 +58,7 @@ for b, ind in izip(loadBoards(file("validatortestingboards{}.txt".format(sourcei
     valid, valValue = movevalidator.isValid(move)
     if valid:
         interpreter.commit(b)
-        movevalidator.Commit(move,valValue)
+        movevalidator.Commit(move,valValue,'Q')
         print "#{}".format(ind)
         print strSigns(movevalidator.board,transform=True)
         print "next play: {}".format(movevalidator.nextPlay())

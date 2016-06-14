@@ -1,5 +1,5 @@
 from itertools import *
-
+import copy
 class boardChange:
     def __init__(self, kind, coordinates):
         self.coordinates = coordinates
@@ -129,7 +129,7 @@ class moveInterpreter:
         return self.prevs[-1]
     @prev.setter
     def prev(self, value):
-        self.prevs.append(value)
+        self.prevs.append(copy.deepcopy(value))
     def nextmove(self, currentBoard):
         prev = self.prev
         changes = Changes(prev, currentBoard)

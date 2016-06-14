@@ -17,10 +17,15 @@ def getPath(origin, target):
         yield origin
         origin = bringCloserTo(origin,target)
 class piece:
-    def __init__(self,token):
+    def __init__(self,token, encodingslot, encodingFlag = 0):
         self.token = token
         self.location = None
         self.firstMoveTime = None
+        self.encodingslot = encodingslot
+        self.encodingFlag = encodingFlag
+    @staticmethod
+    def sign():
+        return '?'
     def validMove(self, targetLocation, board):
         if not board.occupant(targetLocation) is None:
             return False
@@ -45,8 +50,8 @@ class piece:
     def __repr__(self):
         return "{}s {} at {}".format(self.token,self.sign(),self.location)
 class pawn(piece):
-    def __init__(self,token,direction):
-        piece.__init__(self,token)
+    def __init__(self,token,direction, encodingslot):
+        piece.__init__(self,token, encodingslot)
         self.jumpTime = None
         self.direction = direction
     def canMove(self,targetLocation,board):
@@ -83,8 +88,8 @@ class pawn(piece):
     def sign():
         return "P"
 class knight(piece):
-    def __init__(self,token):
-        piece.__init__(self,token)
+    def __init__(self,token, encodingslot):
+        piece.__init__(self,token, encodingslot, 1 << 6)
     def canMove(self,targetLocation,board):
         diff = locationdiff(self.location,targetLocation)
         if (abs(diff[0]) + abs(diff[1])) !=3:
@@ -94,8 +99,8 @@ class knight(piece):
     def sign():
         return "H"
 class king(piece):
-    def __init__(self,token):
-        piece.__init__(self,token)
+    def __init__(self,token, encodingslot):
+        piece.__init__(self,token, encodingslot)
     def canMove(self,targetLocation,board):
         diff = locationdiff(self.location,targetLocation)
         if abs(diff[0]) > 1 or abs(diff[1])>1 :
@@ -105,8 +110,8 @@ class king(piece):
     def sign():
         return "K"
 class rook(piece):
-    def __init__(self,token):
-        piece.__init__(self,token)
+    def __init__(self,token, encodingslot):
+        piece.__init__(self,token, encodingslot)
     def canMove(self,targetLocation,board):
         diff = locationdiff(self.location,targetLocation)
         if diff[0] != 0 and diff[1] != 0:
@@ -116,8 +121,8 @@ class rook(piece):
     def sign():
         return "R"
 class bishop(piece):
-    def __init__(self,token):
-        piece.__init__(self,token)
+    def __init__(self,token, encodingslot):
+        piece.__init__(self,token, encodingslot)
     def canMove(self,targetLocation,board):
         diff = locationdiff(self.location,targetLocation)
         if abs(diff[0]) != abs(diff[1]):
@@ -127,8 +132,8 @@ class bishop(piece):
     def sign():
         return "B"
 class queen(piece):
-    def __init__(self,token):
-        piece.__init__(self,token)
+    def __init__(self,token, encodingslot):
+        piece.__init__(self,token, encodingslot, 1<<7)
     def canMove(self,targetLocation,board):
         diff = locationdiff(self.location,targetLocation)
         if abs(diff[0]) != abs(diff[1]) and diff[0] != 0 and diff[1] != 0:
