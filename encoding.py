@@ -1,5 +1,7 @@
 from pieces import *
 from boardstate import coortransform
+
+ENCODINGSIZE=37
 #encoding:first 32 bytes: piece locations
 #       next     4 bytes: focus locations
 #       next     1  byte: additional game info 

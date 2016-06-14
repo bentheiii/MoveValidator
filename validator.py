@@ -10,9 +10,17 @@ def containerequals(item1,item2):
 
 class validator:
     def __init__(self,whitetoken,blacktoken,size=8):
-        self.board = boardState(whitetoken,blacktoken,size)
+        self.boards = [boardState(whitetoken,blacktoken,size)]
         #dictates which token should not play next, None means anyone can play next (in case of assignment)
         self.prevTurn = None
+
+    @property
+    def board(self):
+        return self.boards[-1]
+    @board.setter
+    def board(self,value):
+        self.boards.append(value)
+
     def ValidateAppear(self,move):
         whites = filter(lambda x:x.kind==self.board.tokenW,move.appears)
         #whites = []
@@ -102,7 +110,7 @@ class validator:
             r = piece1
         else:
             return False, None
-        if k.firstMoveTime != None or r.firstMoveTime != None:
+        if k.firstMoveTime is not None or r.firstMoveTime is not None:
             return False, None
         if not allClear(self.board,getPath(k.location,r.location)):
             return False, None
@@ -153,7 +161,7 @@ class validator:
     def hasTurn(self,playToken):
         if self.prevTurn is None:
             return True
-        return (self.prevTurn != playToken)
+        return self.prevTurn != playToken
     def nextPlay(self):
         if self.prevTurn is None:
             return None
@@ -210,4 +218,5 @@ class validator:
         elif move.type == moveTypes.multiMove:
             self.commitCastling(validationValue)
         self.board.advance()
-
+    def rollBack(self):
+        self.boards = self.board[:-1]

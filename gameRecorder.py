@@ -5,13 +5,17 @@ import platform
 class osStream:
     def __init__(self,filepath):
         if platform.system()=='Windows':
-            self.descriptor = os.open(filepath,os.O_TRUNC | os.O_SEQUENTIAL | os.O_WRONLY,0777)
+            raise Exception("windows is not supported")
         else:
-            self.descriptor = os.open(filepath,os.O_TRUNC | os.O_CREAT | os.O_WRONLY,0777)
+            self.file = open(filepath,'w')
     def write(self,text):
-        os.write(self.descriptor,text)
+        self.file.write(text)
     def close(self):
-        os.close(self.descriptor)
+        self.file.close()
+    def seek(self,offset,whence):
+        self.file.seek(offset,whence)
+    def truncate(self):
+        self.file.truncate()
 
 def openRecorder(filepath,whiteToken):
     dirpath = os.path.dirname(filepath)
@@ -25,6 +29,11 @@ class gameRecorder:
         self.tokenW = whiteToken
     def record(self,board,move,nextplay):
         towrite = bytearray(encodeState(board,move,self.tokenW,nextplay))
-        self._file.write(towrite)
+        self.write(towrite)
+    def write(self,data):
+        self._file.write(data)
     def __del__(self):
         self._file.close()
+    def rollBack(self,size):
+        self._file.seek(-size, os.SEEK_END)
+        self._file.truncate()
