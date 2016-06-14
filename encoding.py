@@ -16,6 +16,19 @@ from boardstate import coortransform
 #if first focus location is 128, initial appear has happened
 #
 #additional info: 0 means anyone can play next, 1 means white plays next, 2 means black plays next
+#
+#example board (capital is white, lower is black):
+#RHBQKBHR
+#PPPPPPPP
+#::::::::
+#::::::::
+#::::::::
+#::::::::
+#pppppppp
+#rhbqkbhr
+#
+#will be encoded as:
+#[1,9,17,25,33,41,49,57,0,56,8,48,16,40,24,32,6,14,22,30,38,46,54,62,7,63,15,55,23,47,31,39,128,128,128,128,0]
 def encodeState(board,move,whiteToken,nextplay):
     pieces = [64]*32
     for p in board.pieces:
